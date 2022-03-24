@@ -1,0 +1,7 @@
+{
+    "bbox": "-120.335,38.814,-119.775,39.293",
+    "datasets": "National Elevation Dataset (NED) 1 arc-second",
+    "prodFormats": "GeoTIFF",
+    "prodExtents": "1 x 1 degree",
+    "max": "50"
+}
