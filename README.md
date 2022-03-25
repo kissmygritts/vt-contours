@@ -107,3 +107,15 @@ This script is called in the Makefile `stage-vrt` target like: `cat data/tnm-url
 Given an single input DEM (preferably a VRT created with `/vsicurl/`) this script will generate a [GeoJSONSeq](https://gdal.org/drivers/vector/geojsonseq.html) file of contours. Currently the script defaults to 40ft contours in feet. GeoJSONSeq is a file format that can be parallelized for input into tippecanoe.
 
 I call this script in the make file with `xargs -P` to [parallelize](https://www.gnu.org/software/findutils/manual/html_node/find_html/Controlling-Parallelism.html) the creation of contours.
+
+`make-mbtiles.sh`
+
+TODO:
+
+## Preview Tiles
+
+Use `mbview` to preview the tiles you've created.
+
+```bash
+find data/mbtiles-feet/ -type f -name '*.mbtiles' -print0
+```

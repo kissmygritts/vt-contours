@@ -3,6 +3,7 @@
 **/*/sandbox.*
 
 data/**/*.geojson
+data/**/*.gpkg
 data/**/*.vrt
 data/**/*.tif
 data/**/*.mbtiles
