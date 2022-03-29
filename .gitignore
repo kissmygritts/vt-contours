@@ -7,6 +7,11 @@ data/**/*.gpkg
 data/**/*.vrt
 data/**/*.tif
 data/**/*.mbtiles
+data/**/*.pbf
+
+data/contours-feet/*
+data/usgs-contours/*
+data/vrt/*
 
 # Created by https://www.toptal.com/developers/gitignore/api/windows,linux,macos,visualstudiocode,cmake,data
 # Edit at https://www.toptal.com/developers/gitignore?templates=windows,linux,macos,visualstudiocode,cmake,data

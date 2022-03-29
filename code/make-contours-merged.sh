@@ -1,9 +1,14 @@
 #! /usr/bin/env bash
 
 start=`date +%s`
-
 temp_dir=$(mktemp -d)
 
+# -q         : quiet mode
+# -r         : resample method = cubicspline
+# -t_srs     : CRS of data
+# -ot        : data type
+# -dstnodata : no data value
+# -multi     : use multi processes to run gdalwarp
 gdalwarp \
     -q \
     -r cubicspline \
@@ -13,11 +18,15 @@ gdalwarp \
     -multi \
     data/vrt/merged.vrt ${temp_dir}/test_wgs84.vrt
 
+# convert to feet
 gdal_translate \
     -q \
     -scale 0 0.3048 0 1 \
     ${temp_dir}/test_wgs84.vrt ${temp_dir}/test_wgs84_feet.vrt
 
+# -a:       name of the attribute to store data
+# -i:       contour interval to generate
+# -f:       output format geopackage
 gdal_contour \
     `# Put elevation values into 'ele_ft'` \
     -a ele_ft \
@@ -27,22 +36,31 @@ gdal_contour \
     -f GPKG \
     ${temp_dir}/test_wgs84_feet.vrt data/contour.gpkg
 
-ogr2ogr -simplify 0.00003 -f GeoJSONSeq data/contour.geojson data/contour.gpkg
+# -sql      : select, cast attributes to include (and only those attributes)
+# -nln      : new layer name = contours
+# -simplify : threshold to simplify the geometries by, in the source unit of measure
+# -f        : output format, GeoJSONSeq for parallelization in tippecanoe
+ogr2ogr \
+    -sql "select cast(ele_ft as integer) AS ele_ft, geom from contour" \
+    -nln "contours" \
+    -simplify 0.00003 \
+    -f GeoJSONSeq data/contours.geojson \
+    data/contour.gpkg
 
+# Create vector tiles with tippecanoe
+# -Z, -z: set min, max zooms
+# -P:     run in parallel
+# -y:     only incude the ele_ft attribute
+# -l:     layer name = contours
+# -C:     filter the layers based contour level at different zooms
 tippecanoe \
-    `# Set min zoom to 11` \
-    -Z11 \
-    `# Set max zoom to 13` \
-    -z13 \
-    `# Read features in parallel; only works with GeoJSONSeq input` \
+    -Z11 -z13 \
     -P \
-    `# Keep only the ele_ft attribute` \
     -y ele_ft \
-    `# Put contours into layer named 'contour_40ft'` \
-    -l contour_40ft \
-    `# Export to contour_40ft.mbtiles` \
-    -o data/test.mbtiles \
-    data/contour.geojson
+    -l contours \
+    -C './code/imperial-prefilter.sh "$@"' \
+    -o data/contours.mbtiles \
+    data/contours.geojson
 
 
 end=`date +%s`

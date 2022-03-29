@@ -14,9 +14,10 @@ cd vt-contours
 Install dependencies. This part is still a work in progress. Here is a list of the following dependencies. I've only tested this on Windows with WSL for now.
 
 * `python3`
-* `jq` - a command line JSON utility
-* `gdal` - a geospatial CLI utility library
-* `tippecanoe` - a CLI utility to create vector tiles
+* [`jq`](https://stedolan.github.io/jq/) - a command line JSON utility.
+* `gdal` - a geospatial CLI utility library.
+* [`tippecanoe`](https://github.com/mapbox/tippecanoe) - a CLI utility to create vector tiles.
+* [`mbview`](https://github.com/mapbox/mbview) - a `.mbtiles` server to preview vector tiles locally. *Requires mapbox access token.*
 
 ```shell
 # python and jq can be installed with apt-get

@@ -1,18 +1,29 @@
 CPUS=4
 
+contours-feet-all: prepare-dems contours-feet contours-feet-s3
+
+prepare-dems: get-url-list stage-vrt
+
+contours-feet:
+	./code/make-contours-merged.sh
+
+contours-feet-s3:
+	tile-join -e data/contours-feet data/contours.mbtiles
+	aws s3 cp data/contours-feet s3://tiles.wildlifenv.com/contours-feet/ \
+		--content-encoding gzip \
+		--recursive
+
 get-url-list:
 	./code/get-tnm-urls.sh
 
 stage-vrt:
 	mkdir data/vrt
-	cat data/tnm-url-list.txt | sed 's/^/\/vsicurl\//' | xargs -L1 ./code/make-vrt.sh
-	gdalbuildvrt data/vrt/merged.vrt data/vrt/*.vrt
+	cat data/tnm-url-list.txt | sed 's/^/\/vsicurl\//' > data/vrt/input-file-list.txt
+	gdalbuildvrt -input_file_list data/vrt/input-file-list.txt data/vrt/merged.vrt
 
 create-contours-feet:
 	find data/vrt/ -type f -name '*.vrt' | xargs -P $(CPUS) -L1 ./code/make-contours-feet.sh
 
-merged-mbtiles:
-	bash ./code/make-contours-merged.sh
 
 mbtiles-feet:
 	mkdir -p data/mbtiles-feet
