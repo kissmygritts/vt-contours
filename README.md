@@ -1,8 +1,10 @@
 # vt-contours
 
-Create vector tiles from USGS contours from The National Map. Heavily borrowed from Kyle Barron's [nst-guide/terrain](https://github.com/nst-guide/terrain).
+Create vector tiles from USGS contours from The National Map. Heavily borrowed from Kyle Barron's [nst-guide/terrain](https://github.com/nst-guide/terrain). I'm using this as a prototype for future USGS CLI tools.
 
 ## Usage
+
+This has been developed using [Windows WSL](https://docs.microsoft.com/en-us/windows/wsl/install). Refer to the Install Dependencies to install the required tools.
 
 Clone this repository:
 
@@ -11,9 +13,25 @@ git clone https://github.com/kissmygritts/vt-contours.git
 cd vt-contours
 ```
 
+You might need to run `chmod +x ./code/*.sh` to allow execution of `.sh` scripts.
+
+The first 4 make commands are relevant to creating contours:
+
+1. `make prepare-dems` - this will fetch download URLS from the National Map API and stage a mosaiced virtual raster `data/vrt/merged.vrt`. This file can be useful for future analysis. For instance, you can create and "real" mosaiced raster, create hillshades, slope angle, etc using other gdal commands.
+2. `make contours-feet` - this will use `data/vrt/merged.vrt` to generate 40 foot interval contours for the area of interest. The output is
+    * `data/contours.gpkg` raw contours. ~21gb for the state of Nevada w 100km buffer.
+    * `data/contours.geojson` simplified and minified contours. This format is GeoJSONSeq that allows tippecanoe to parallelize the create of vector tiles.
+    * `data/contours.mbtiles` vector tiles of the simplified contours. ~1gb.
+3. `make countrs-feet-s3` ues the AWS CLI to upload zxy directory of tiles to AWS S3.
+4. `make contours-feet-all` - this will run all the commands necessary to create contours for your area of interest. 
+
+## Install Dependencies
+
+### Windows, WSL
+
 Install dependencies. This part is still a work in progress. Here is a list of the following dependencies. I've only tested this on Windows with WSL for now.
 
-* `python3`
+* `python3` - this is often already installed.
 * [`jq`](https://stedolan.github.io/jq/) - a command line JSON utility.
 * `gdal` - a geospatial CLI utility library.
 * [`tippecanoe`](https://github.com/mapbox/tippecanoe) - a CLI utility to create vector tiles.
@@ -21,9 +39,9 @@ Install dependencies. This part is still a work in progress. Here is a list of t
 
 ```shell
 # python and jq can be installed with apt-get
-sudo apt-get install python3 jq
+sudo apt-get install python3 jq make
 
-# gdal requires a PPA for the most recent version this should install gdal 3.3.2 (as of 2022-03-25)
+# gdal - best to use the ppa:ubuntugis to get gdal 3.3.2 (as of 2022-03-25)
 sudo add-apt-repository ppa:ubuntugis/ppa
 sudo apt-get update
 sudo apt-get install gdal-bin
@@ -38,6 +56,30 @@ sudo make -j
 sudo make install
 
 tippecanoe --version    # test install worked
+```
+
+### MacOS
+
+Use brew to install all the dependencies.
+
+```shell
+brew install python3 jq gdal tippecanoe
+```
+
+## Viewing the tiles
+
+Probably the best way to view the tiles is with `mbview`. However, this requires that nodejs is installed. `nvm`, Node Version Manager is probably one of the easier ways to get started with node. If you want, you can use homebrew (mac) or apt-get (linux, WSL) to install node.
+
+```shell
+# install NVM - Node Version Manager
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.1/install.sh | bash
+nvm install node
+
+# install mbview
+npm install -g @mapbox/mbview
+
+# view tiles
+mbview data/contours.mbtiles
 ```
 
 ## USGS Contours
@@ -56,7 +98,7 @@ We can genearate our own contours from DEMs as an alternative. The USGS provides
 
 For testing purposes I've started using the 1 arc-second DEMs. They tile download and tile quickly.
 
-### Stage Products
+### Staged Products
 
 A lot of USGS' data is available at their [staged products server](http://prd-tnm.s3.amazonaws.com/index.html?prefix=). There are a few things to note about the elevation data. 
 
